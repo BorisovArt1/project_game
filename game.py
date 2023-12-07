@@ -8,12 +8,30 @@ import pygame_menu
 import pygame_menu.themes
 import pygame.font
 from gun import Gun
+from alien import Alien, AlienLvl3
 
 pygame.font.init()
 pygame.init()
 
 picture = pygame.image.load('images/icon.jpeg')
 pygame.display.set_icon(picture)
+
+ALIEN_LVL3_EVENT = pygame.USEREVENT + 1
+pygame.time.set_timer(ALIEN_LVL3_EVENT, 1000)
+
+pygame.mixer.music.load('music/game_music.mp3')
+pygame.mixer.music.play(-1)
+
+music_paused = False #Флаг для отслеживания музыки
+
+
+def toohle_music():
+    global music_paused
+    if music_paused:
+        pygame.mixer.music.unpause()
+    else:
+        pygame.mixer.music.pause()
+    music_paused = not music_paused
 
 
 def game_over(screen):
@@ -49,6 +67,8 @@ def run():
     aliens = Group()
     stats = Stats()
     score = Score(screen, stats)
+
+    movements.create_army(screen, aliens, stats)
 
     paused = False
 
@@ -92,6 +112,10 @@ def run():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            elif event.type == ALIEN_LVL3_EVENT and stats.level >= 3:
+                for _ in range(7):
+                    new_alien = AlienLvl3(screen)
+                    aliens.add(new_alien)
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     paused = not paused
@@ -102,17 +126,27 @@ def run():
                         elif result == "menu":
                             return
                     continue
+                elif event.key == pygame.K_e:
+                    pygame.mixer.music.pause()
+                elif event.key == pygame.K_q:
+                    pygame.mixer.music.unpause()
+
                 movements.check_keydown_events(event, screen, gun, bullets)
             elif event.type == pygame.KEYUP:
                 movements.check_keyup_events(event, gun)
 
         if not paused:
             gun.update_gun()
+            bullets.update()
+            for alien in aliens:
+                alien.update()
+            movements.check_collisions(screen, bullets, aliens, stats, score)
+
+            if stats.level >= 3:
+                movements.create_army(screen, aliens, stats)
+                movements.update_aliens(stats, screen, score, gun, aliens, bullets)
+
             movements.update_screen(bg_color, screen, stats, score, gun, aliens, bullets)
-            movements.update_bullets(screen, stats, score, aliens, bullets)
-            movements.update_aliens(stats, screen, score, gun, aliens, bullets)
-
-
         pygame.display.flip()
 
 
@@ -130,6 +164,7 @@ class Menu:
 
         self.main_menu.add.button('Начать игру', self.start_game)
         self.main_menu.add.button('Управление', self.show_controls)
+        self.main_menu.add.button('Про что игра', self.show_inf)
         self.main_menu.add.button('Выход', pygame_menu.events.EXIT)
 
     def start_game(self):
@@ -142,15 +177,55 @@ class Menu:
     def show_controls(self):
         self.main_menu.disable()
         pygame.event.clear()
-        pygame.display.set_caption("Managment")
+        pygame.display.set_caption("Управление")
         clock = pygame.time.Clock()
 
         text_lines = [
             "Движение вправо - A (английская раскладка)",
             "Движение влево - D (английская раскладка)",
             "Стрельба - пробел",
-            "(Нажмите esc для возврата в главное меню)",
-            "(Нажмите esc, чтобы поставить игру на паузу)"
+            "Нажмите esc для возврата в главное меню",
+            "Нажмите esc во время игры, чтобы поставить игру на паузу",
+            "e - пауза музыки, q - возобновить музыку (английская раскладка)",
+            "Переключать состояние музыки можно только во время игры"
+        ]
+
+        font = pygame.font.Font(None, 28)
+        line_height = font.get_height()
+        total_height = line_height * len(text_lines)
+        y_start = (self.menu_height - total_height) // 2
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    self.main_menu.enable()
+                    return
+            pygame.event.pump()
+
+            self.screen.fill((0, 0, 0))
+
+            for i, line in enumerate(text_lines):
+                text_surface = font.render(line, True, (255, 255, 255))
+                text_rect = text_surface.get_rect(center=(self.menu_width // 2, y_start + i * line_height))
+                self.screen.blit(text_surface, text_rect)
+
+            pygame.display.flip()
+            clock.tick(60)
+
+    def show_inf(self):
+        self.main_menu.disable()
+        pygame.event.clear()
+        pygame.display.set_caption("Про что игра")
+        clock = pygame.time.Clock()
+
+        text_lines = [
+            "Данная игра состоит из трех уровней",
+            "Первые два уровня разминочные, а третий уже бесконечный",
+            "Вам предстоит миссия по защите планеты",
+            "В 1 и 2 уровнях нельзя пускать корабли за нижнюю границу экрана",
+            "Потому что подмога еще не прибыла",
+            "В 3 уровне уже можно",
+            "Потому что вас есть кому прикрыть"
         ]
 
         font = pygame.font.Font(None, 28)

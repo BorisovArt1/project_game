@@ -45,8 +45,20 @@ class Score:
             life.rect.y = 20
             self.lifes.add(life)
 
+    def drawing_level(self):
+        """Преобразование текста уровня в графическое изображение"""
+        self.level_image = self.font.render('Level: ' + str(self.stats.level), True, 'WHITE',
+                                            (0, 0, 0))
+        self.level_rect = self.level_image.get_rect()
+        self.level_rect.right = self.screen_rect.right - 40
+        self.level_rect.top = self.score_rect.top + 20
+
     def show_score(self):
         """Отображение счета на экране"""
         self.screen.blit(self.score_image, self.score_rect)
         self.screen.blit(self.record_image, self.record_rect)
+        self.screen.blit(self.level_image, self.level_rect)
         self.lifes.draw(self.screen)
+
+
+

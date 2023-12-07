@@ -16,7 +16,7 @@ class Alien(Sprite):
         self.rect.y = self.rect.height
         self.x = float(self.rect.x)
         self.y = float(self.rect.y)
-        self.speed = 0.07
+        self.speed = 0.06
 
     def draw(self):
         """"Отрисовка пришельцев на экране"""
@@ -26,8 +26,6 @@ class Alien(Sprite):
         """"Перемещение пришельцев"""
         self.y += self.speed
         self.rect.y = self.y
-        if self.rect.bottom >= self.screen.get_height():
-            self.kill()
 
 
 class AlienLvl3(Sprite):

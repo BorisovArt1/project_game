@@ -25,7 +25,7 @@ pygame.mixer.music.play(-1)
 music_paused = False #Флаг для отслеживания музыки
 
 
-def toohle_music():
+def toggle_music():
     global music_paused
     if music_paused:
         pygame.mixer.music.unpause()
@@ -141,6 +141,7 @@ def run():
             for alien in aliens:
                 alien.update()
             movements.check_collisions(screen, bullets, aliens, stats, score)
+            movements.update_aliens(stats, screen, score, gun, aliens, bullets)
 
             if stats.level >= 3:
                 movements.create_army(screen, aliens, stats)

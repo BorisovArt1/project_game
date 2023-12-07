@@ -54,7 +54,7 @@ def destroying_gun(stats, screen, score, gun, aliens, bullets):
 
 
 def update_aliens(stats, screen, score, gun, aliens, bullets):
-    """"Обновление позиции пришельцев"""
+
     screen_rect = screen.get_rect()
     for alien in aliens.sprites():
         alien.update()
